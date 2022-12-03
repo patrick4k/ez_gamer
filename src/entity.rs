@@ -9,7 +9,6 @@ use crate::world::World;
 
 #[derive(PartialEq)]
 pub struct Entity {
-    id: String,
     pos: GridPosition,
     sprite: Sprite,
     state: EntityState
@@ -18,33 +17,26 @@ pub struct Entity {
 impl Entity {
     pub fn default() -> Self {
         Entity {
-            id: "default".to_string(),
             pos: GridPosition::default(),
             sprite: Sprite::default(),
             state: EntityState::DEFAULT
         }
     }
 
-    pub fn new(world: &World, pos: GridPosition) -> Self {
+    pub fn new(pos: GridPosition) -> Self {
         Entity {
-            id: Entity::generate_id(world),
             pos,
             sprite: Sprite::default(),
             state: EntityState::DEFAULT
         }
     }
 
-    pub fn new_with_sprite(world: &World, pos: GridPosition, sprite: Sprite) -> Self {
+    pub fn new_with_sprite(pos: GridPosition, sprite: Sprite) -> Self {
         Entity {
-            id: Entity::generate_id(world),
             pos,
             sprite,
             state: EntityState::DEFAULT
         }
-    }
-
-    fn generate_id(world: &World) -> String {
-        "peepee".to_string()
     }
 
     pub fn draw(&self, canvas: &mut graphics::Canvas) {
@@ -67,9 +59,6 @@ impl Entity {
     }
     pub fn state(&self) -> &EntityState {
         &self.state
-    }
-    pub fn id(&self) -> &str {
-        &self.id
     }
     pub fn sprite(&self) -> &Sprite {
         &self.sprite

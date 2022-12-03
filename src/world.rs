@@ -41,7 +41,7 @@ impl World {
 
         world.init_resources().expect("Error reading entity resources");
         let sprite = world.get_sprite("resources\\Entity\\TestEntity.json".to_string());
-        world.entities.push(Entity::new_with_sprite(&world, rand_pos, sprite.clone()));
+        world.entities.push(Entity::new_with_sprite(rand_pos, sprite.clone()));
         world
     }
 
@@ -61,42 +61,26 @@ impl World {
         self.entity_resources.get(&*sprite_name).unwrap().clone()
     }
 
-    fn check_for_intersect(&self) -> Vec<(&str,&str)> {
+    fn check_for_intersect(&self) -> Vec<(&Entity, &Entity)> {
+        // TODO REWORK THIS
+
         let mut occupied: (Vec<GridPosition>,Vec<&Entity>) = (vec![],vec![]);
-        let mut collision_list: Vec<(&str, &str)> = vec![];
-        for entity in &self.entities {
-            for grid_space in entity.get_occupied_grids() {
+        let mut collision_list: Vec<(&Entity, &Entity)> = vec![];
+        for entity1 in &self.entities {
+            for grid_space in entity1.get_occupied_grids() {
                 if !occupied.0.contains(&grid_space) {
                     occupied.0.push(grid_space);
-                    occupied.1.push(entity);
+                    occupied.1.push(entity1);
                 }
                 else {
                     let index_of_pos = occupied.0.iter().position(|x| *x == grid_space).unwrap();
-                    collision_list.push((entity.id(), occupied.1.get(index_of_pos).unwrap().id()));
+                    let entity2 = occupied.1.get(index_of_pos).unwrap();
+                    collision_list.push((entity1, entity2));
                     println!("COLLIDE");
                 }
             }
         }
         collision_list
-    }
-
-    fn handle_collisions(&mut self, collide_list: Vec<(&str, &str)>) {
-        let mut entity1: &Entity = &Entity::default();
-        let mut entity2: &Entity = &Entity::default();
-
-        for collision in collide_list {
-            for entity in &self.entities {
-                if entity.id() == collision.0 {
-                    entity1 = entity;
-                }
-                if entity.id() == collision.1 {
-                    entity2 = entity;
-                }
-            }
-        }
-
-        self.kill(entity1);
-        self.kill(entity2);
     }
 
     fn kill(&mut self, entity: &Entity) {
@@ -110,9 +94,9 @@ impl EventHandler<GameError> for World {
         while _ctx.time.check_update_time(DESIRED_FPS) {
             let rand_pos = GridPosition::random(&mut self.rng, GRID_SIZE.0, GRID_SIZE.1);
             let sprite = self.get_sprite("resources\\Entity\\TestEntity.json".to_string());
-            self.entities.push(Entity::new_with_sprite(self, rand_pos, sprite));
-            let collide_list = self.check_for_intersect();
-
+            self.entities.push(Entity::new_with_sprite(rand_pos, sprite));
+            let collide_list: Vec<(&Entity, &Entity)> = self.check_for_intersect();
+            // TODO Handle collisions
         }
 
         Ok(())
@@ -129,11 +113,12 @@ impl EventHandler<GameError> for World {
 }
 
 pub fn launch() -> GameResult {
-    let (mut ctx, event_loop) = ContextBuilder::new("world", "Patrick Kennedy")
+    let (mut ctx, event_loop) =
+        ContextBuilder::new("world", "Patrick Kennedy")
         .window_setup(ggez::conf::WindowSetup::default().title("World"))
-        .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1))
-        .build()
-        .expect("aieee, could not create ggez context!");
+        .window_mode(ggez::conf::WindowMode::default()
+            .dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1))
+        .build().expect("aieee, could not create ggez context!");
 
     let world = World::new(&mut ctx);
 
